@@ -160,6 +160,18 @@
         };
 
         const formatter = new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" });
+        const timeformat = date => {
+          const now = new Date(date),
+            yyyy = now.getFullYear(),
+            MM = now.getMonth() + 1,
+            dd = now.getDate(),
+            hh = now.getHours(),
+            mm = now.getMinutes();
+          const twoDigit = dg => {
+            return dg < 10 ? "0" + dg : dg;
+          };
+          return `${twoDigit(dd)}/${twoDigit(MM)}/${yyyy} ${twoDigit(hh)}:${twoDigit(mm)}`;
+        };
 
         const beginMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
         const currentTime = new Date();
@@ -186,7 +198,12 @@
           data: data1,
           columns: [
             { data: "c7" },
-            { data: "t" },
+            {
+              data: "t",
+              render: (data, type, row) => {
+                return timeformat(data);
+              }
+            },
             { data: "c2" },
             { data: "c3" },
             { data: "c4" },

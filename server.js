@@ -62,6 +62,6 @@ app.post("/api/naptien01", (req, res) => {
 
 // SERVER
 const server = Server(app);
-server.listen(3000, () => {
-  console.log("Server init on port: " + 3000);
+server.listen(configs.appport, () => {
+  console.log("Server init on port: " + configs.appport);
 });

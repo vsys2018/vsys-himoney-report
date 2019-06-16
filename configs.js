@@ -1,5 +1,5 @@
 module.exports = {
-  mongouri: "mongodb://ketsatadmin:KSue6zW2TYqL@ds123346.mlab.com:23346/ketsat_cantho",
+  mongouri: "mongodb://vsdemo:2018%24CongHoa19614@35.247.153.138:19614/demo",
   collection1: "gd_naptien",
   collection2: "gd_ruttien",
   appport: 8002

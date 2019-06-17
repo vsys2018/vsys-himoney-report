@@ -30,7 +30,7 @@ body {
 .be-datatable-header {
   border-bottom: 1px solid #d5d8de;
   margin: 2px 0 0;
-  padding: 15px 10px 22px;
+  padding: 15px 10px 10px;
 }
 
 div.dataTables_wrapper div.dataTables_paginate ul.pagination {
@@ -121,4 +121,13 @@ a {
   background-color: #fff;
   border: 1px solid #ddd;
   margin-left: -1px;
+}
+
+.margin-right-10 {
+  margin-right: 10px;
+  margin-bottom: 5px;
+}
+
+.form-control {
+  width: 100% !important;
 }

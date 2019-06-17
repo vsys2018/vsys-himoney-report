@@ -80,6 +80,17 @@
                   <th>Tiền nạp</th>
                 </tr>
               </thead>
+              <tfoot style="width: 100%">
+                <tr>
+                  <th>Địa điểm</th>
+                  <th>Thời gian</th>
+                  <th>ID Thẻ</th>
+                  <th>Tên nhân viên</th>
+                  <th>Số điện thoại</th>
+                  <th>Lý do nạp tiền</th>
+                  <th>Tiền nạp</th>
+                </tr>
+              </tfoot>
               <tbody></tbody>
             </table>
           </div>
@@ -130,6 +141,15 @@
                   <th>Tổng tiền lấy ra</th>
                 </tr>
               </thead>
+              <tfoot style="width: 100%">
+                <tr>
+                  <th>Địa điểm</th>
+                  <th>Thời gian</th>
+                  <th>Tên nhân viên</th>
+                  <th>Thao tác</th>
+                  <th>Tổng tiền lấy ra</th>
+                </tr>
+              </tfoot>
               <tbody></tbody>
             </table>
           </div>
@@ -141,14 +161,14 @@
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/js/bootstrap.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.9.0/moment-with-locales.js"></script>
     <script src="https://cdn.rawgit.com/Eonasdan/bootstrap-datetimepicker/e8bddc60e73c1ec2475f827be36e1957af72e2ea/src/js/bootstrap-datetimepicker.js"></script>
-    <script src="https://cdn.datatables.net/1.10.12/js/jquery.dataTables.min.js"></script>
-    <script src="https://cdn.datatables.net/1.10.12/js/dataTables.bootstrap.min.js"></script>
+    <script src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.10.19/js/dataTables.bootstrap.min.js"></script>
     <script src="https://cdn.datatables.net/buttons/1.5.6/js/dataTables.buttons.min.js"></script>
     <script src="https://cdn.datatables.net/buttons/1.5.6/js/buttons.html5.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/pdfmake.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
-    <script src="https://cdn.datatables.net/plug-ins/1.10.12/api/sum().js"></script>
+    <script src="https://cdn.datatables.net/plug-ins/1.10.19/api/sum().js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jquery-easy-loading/dist/jquery.loading.min.js"></script>
     <script type="text/javascript">
       $(document).ready(function() {
@@ -189,7 +209,7 @@
 
         let data1 = [];
 
-        const table1 = $("#table1").dataTable({
+        const table1 = $("#table1").DataTable({
           buttons: ["excelHtml5", "pdfHtml5"],
           pageLength: 10,
           lengthMenu: [[6, 10, 25, 50, -1], [6, 10, 25, 50, "All"]],
@@ -216,10 +236,11 @@
               }
             }
           ],
-          processing: true
+          processing: true,
+          initComplete: function() {}
         });
 
-        const table2 = $("#table2").dataTable({
+        const table2 = $("#table2").DataTable({
           buttons: ["excelHtml5", "pdfHtml5"],
           pageLength: 10,
           lengthMenu: [[6, 10, 25, 50, -1], [6, 10, 25, 50, "All"]],
@@ -266,14 +287,52 @@
             .then(res => {
               if (res.length > 0) {
                 // Update table
-                table1.fnClearTable();
-                table1.fnAddData(res);
+                table1.clear().draw();
+                table1.rows.add(res).draw();
                 let sum = res.sum("c1");
                 $("#table1-sum").text(formatter.format(sum));
+
+                table1.columns().every(function() {
+                  var column = this;
+                  var col = column.eq(0)[0];
+                  if (col == 1 || col == 6) {
+                    var select = $('<select class="form-control" disabled></select>').appendTo(
+                      $(column.footer()).empty()
+                    );
+                  } else {
+                    var select = $(
+                      '<select class="form-control"><option value=""></option></select>'
+                    )
+                      .appendTo($(column.footer()).empty())
+                      .on("change", function() {
+                        var val = $.fn.dataTable.util.escapeRegex($(this).val());
+                        let search = column.search(val ? "^" + val + "$" : "", true, false).draw();
+                        let newsum = search
+                          .column(6, { filter: "applied" })
+                          .data()
+                          .sum();
+                        $("#table1-sum").text(formatter.format(newsum));
+                      });
+                    column
+                      .data()
+                      .unique()
+                      .sort()
+                      .each(function(d, j) {
+                        select.append('<option value="' + d + '">' + d + "</option>");
+                      });
+                  }
+                });
+
                 $("#table1").loading("toggle");
               } else {
-                table1.fnClearTable();
+                table1.clear().draw();
                 $("#table1-sum").text(formatter.format(0));
+                table1.columns().every(function() {
+                  var column = this;
+                  var select = $(
+                    '<select class="form-control"><option value=""></option></select>'
+                  ).appendTo($(column.footer()).empty());
+                });
                 $("#table1").loading("toggle");
               }
             });
@@ -299,14 +358,51 @@
             .then(res => {
               if (res.length > 0) {
                 // Update table
-                table2.fnClearTable();
-                table2.fnAddData(res);
+                table2.clear().draw();
+                table2.rows.add(res).draw();
                 let sum = res.sum("c3");
                 $("#table2-sum").text(formatter.format(sum));
+                table2.columns().every(function() {
+                  var column = this;
+                  var col = column.eq(0)[0];
+                  if (col == 1 || col == 4) {
+                    var select = $('<select class="form-control" disabled></select>').appendTo(
+                      $(column.footer()).empty()
+                    );
+                  } else {
+                    var select = $(
+                      '<select class="form-control"><option value=""></option></select>'
+                    )
+                      .appendTo($(column.footer()).empty())
+                      .on("change", function() {
+                        var val = $.fn.dataTable.util.escapeRegex($(this).val());
+                        let search = column.search(val ? "^" + val + "$" : "", true, false).draw();
+                        let newsum = search
+                          .column(4, { filter: "applied" })
+                          .data()
+                          .sum();
+                        $("#table2-sum").text(formatter.format(newsum));
+                      });
+                    column
+                      .data()
+                      .unique()
+                      .sort()
+                      .each(function(d, j) {
+                        select.append('<option value="' + d + '">' + d + "</option>");
+                      });
+                  }
+                });
+
                 $("#table2").loading("toggle");
               } else {
-                table2.fnClearTable();
+                table2.clear().draw();
                 $("#table2-sum").text(formatter.format(0));
+                table2.columns().every(function() {
+                  var column = this;
+                  var select = $(
+                    '<select class="form-control"><option value=""></option></select>'
+                  ).appendTo($(column.footer()).empty());
+                });
                 $("#table2").loading("toggle");
               }
             });

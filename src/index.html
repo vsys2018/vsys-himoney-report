@@ -226,7 +226,22 @@
             "<'row be-datatable-body'<'col-sm-12'tr>>" +
             "<'row be-datatable-footer'<'col-sm-3'i><'col-sm-2 text-right'B><'col-sm-7'p>>",
           data: data1,
-          columns: [{ data: "c1" }, { data: "t" }, { data: "c2" }, { data: "c3" }]
+          columns: [
+            { data: "c6" },
+            {
+              data: "t",
+              render: (data, type, row) => {
+                return timeformat(data);
+              }
+            },
+            { data: "c4" },
+            {
+              data: "c3",
+              render: (data, type, row) => {
+                return formatter.format(data);
+              }
+            }
+          ]
         });
 
         function getDataIn(from, to) {
@@ -262,7 +277,41 @@
             });
         }
 
+        function getDataOut(from, to) {
+          $("#table2").loading();
+          fetch("/api/ruttien01", {
+            method: "POST",
+            credentials: "same-origin",
+            headers: { "Content-Type": "application/json" },
+            redirect: "follow",
+            referrer: "no-referrer",
+            body: JSON.stringify({
+              fromdate: from,
+              todate: to,
+              filter: filterquery
+            })
+          })
+            .then(res => {
+              return res.json();
+            })
+            .then(res => {
+              if (res.length > 0) {
+                // Update table
+                table2.fnClearTable();
+                table2.fnAddData(res);
+                let sum = res.sum("c3");
+                $("#table2-sum").text(formatter.format(sum));
+                $("#table2").loading("toggle");
+              } else {
+                table2.fnClearTable();
+                $("#table2-sum").text(formatter.format(0));
+                $("#table2").loading("toggle");
+              }
+            });
+        }
+
         getDataIn(beginMonth.toISOString(), currentTime.toISOString());
+        getDataOut(beginMonth.toISOString(), currentTime.toISOString());
 
         dt1from.on("dp.change", e => {
           let dtpto = $("#dtp-01-to")
@@ -282,6 +331,26 @@
           let totime = new Date(e.date._d);
 
           getDataIn(fromtime.toISOString(), totime.toISOString());
+        });
+
+        dt2from.on("dp.change", e => {
+          let dtpto = $("#dtp-02-to")
+            .data("DateTimePicker")
+            .date();
+          let fromtime = new Date(e.date._d);
+          let totime = new Date(dtpto._d);
+
+          getDataOut(fromtime.toISOString(), totime.toISOString());
+        });
+
+        dt2to.on("dp.change", e => {
+          let dtpfrom = $("#dtp-02-from")
+            .data("DateTimePicker")
+            .date();
+          let fromtime = new Date(dtpfrom._d);
+          let totime = new Date(e.date._d);
+
+          getDataOut(fromtime.toISOString(), totime.toISOString());
         });
       });
     </script>
